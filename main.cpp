@@ -77,3 +77,90 @@ struct operators{
 };
 
 typedef pair< pair <string, string>, oper> cond;
+
+int int_parser(string s){
+	return atoi(s.c_str());
+}
+
+bool string_comparer(string a, string b){
+	if(a==b) return true;
+	else return false;
+}
+
+string space_remover(string s){
+	string temp;
+	isstringstream iss(s);
+	do{
+		string sub;
+		iss >> sub;
+		temp+= sub;
+	} while(iss);
+	return temp;
+}
+
+vector<string> comma_separator(string s){
+	vector<string> result;
+	if(s.size()==0)return result;
+	stringstream ss(s);
+	while(ss.good()){
+		string substr;
+		getline(ss, substr, ',');
+		result.push_back(substr);	
+	}
+	return result;
+}
+
+bool is_func(char c){
+	if(c=='P'||c=='S'||c=='U'||c=='R' ||c=='C' || c=='D')return true;
+    else return false;	
+}
+
+bool is_valid_operator(string s){
+
+    if(s=="="||s==">"||s==">="||s=="<="||s=="<"||s=="!=")return true;
+    else return false;
+}
+
+
+void print_table(Table table){
+	cout << table.table_name<<endl;
+	for(int i=0;i<table.no_of_attribute();i++){
+		printElement(table.table_attr[i], nameWidth);
+	}
+	cout << endl;
+	
+	for(int i=0; i<table.no_of_record();i++){
+		for(int j=0; j<table.no_of_attribute();j++){
+			if(table.table_row[i].row[j].type==1)printElement(table.table_row[i].row[j].data9), numWidth);
+else printElement(table.table_row[i].row[j].data(), nameWidth);
+		}
+		cout << endl;
+	}
+}
+
+void generate_error(int code){
+	cout<<"error_code: "<<code<<" : ";
+    switch(code){
+        case 0: cout<<"Table not present\n";
+            break;
+        case 1: cout<<"Column name not present in table\n";
+            break;
+        case 2: cout<<"No of column does not match\n";
+            break;
+        case 3: cout<<"Condition specified not present in table\n";
+            break;
+        case 4: cout<<"Wrong condition operation\n";
+            break;
+        case 5: cout<<"Insert semicolon at the end of parse_query\n";
+            break;
+        case 6: cout<<"Syntax error in query\n";
+            break;
+        case 7: cout<<"Multiple columns with same name please perform Rename operation\n";
+            break;
+        case 8: cout<<"Relations are Union incompatible\n";
+            break;
+    }
+    exit(0);
+
+}
+
