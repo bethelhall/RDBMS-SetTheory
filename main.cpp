@@ -179,7 +179,7 @@ bool condition_checker(vector<cond> cons,Table_row tr,vector<string> table_attr)
                                 flag=false;
                                 return flag;
                             }
-                            break;
+                        ,    break;
                         }
                 }
                 //if value is constant
@@ -238,5 +238,82 @@ bool data_type_comparer(data_type a, data_type b){
     if(a.type=='2')return a.stru==b.stru;
 }
 
+Table create_table(string table_name)
+{
+
+    Table new_table;
+    string file_path1 = file_path+table_name+"_desc.txt"; 
+    string file_path2 = file_path+table_name+"_data.txt"; 
+
+    ifstream infile(file_path1);
+    if(infile.fail()){
+        error_generate(0);
+    }
+    int cnt=0;
+    while(infile)
+    {
+        string s;
+        if(!getline(infile,s)) break;
+
+        istringstream ss( s );
+        while(ss){
+            string s;
+            if(!getline(ss,s,'\t')) break;
+            if(cnt==0){
+                new_table.table_name=s;
+
+            }
+            else if(cnt==1){
+               new_table.table_attr.push_back(s);
+
+            }
+            else if(cnt==2){
+                new_table.table_attr_type.push_back(s[0]);
+            }
+         }
+	 cnt++;
+        }
+	ifstream infile2(file_path2);
+    if(infile2.fail()){
+        error_generate(0);
+    }
+    while(infile2)
+    {
+        string s;
+        if(!getline(infile2,s)) break;
+
+        istringstream ss( s );
+        Table_row record;
+        cnt=0;
+        while(ss){
+            string s;
+            if(!getline(ss,s,'\t')) break;
+
+            data_unit dt(new_table.table_attr_type[cnt],s);
+            record.row.push_back(dt);
+            cnt++;
+        }
+
+        new_table.table_row.push_back(record);
+
+    }
+
+    Table_all[table_name] = new_table;
+    return new_table;
+
+}
+
+Table load_table(string rel_name){
+
+    if( Table_all.find( rel_name ) != Table_all.end()){
+        return Table_all[rel_name];
+    }
+    Table_all[rel_name] = create_table(rel_name);
+    return Table_all[rel_name];
+}
+
+
+
+	
 
 
