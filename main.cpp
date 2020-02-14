@@ -312,6 +312,221 @@ Table load_table(string rel_name){
     return Table_all[rel_name];
 }
 
+Table Project(Table table1,vector<string> sets_attr){
+
+    Table res_table;
+    vector<bool> attribute_checker(table1.no_of_attribute(),false); 
+    for(int i=0;i<sets_attr.size();i++){
+        int j=0;
+        for(;j<table1.no_of_attribute();j++){
+            if(my_str_cmp(sets_attr[i],table1.table_attr[j])){
+                attribute_checker[j]=true;
+                break;
+            }
+        }
+        if(j==table1.no_of_attribute()){
+            error_generate(1);
+        }
+    }
+    for(int i=0;i<table1.no_of_record();i++){
+        Table_row record;
+        for(int j=0;j<table1.no_of_attribute();j++){
+            if(attribute_checker[j]){                      
+                record.row.push_back(table1.table_row[i].row[j]); 
+            }
+        }
+        res_table.table_row.push_back(record); 
+    }
+	 for(int j=0;j<table1.no_of_attribute();j++){  
+            if(attribute_checker[j]){
+                res_table.table_attr.push_back(table1.table_attr[j]);
+                res_table.table_attr_type.push_back(table1.table_attr_type[j]);
+            }
+        }
+
+    res_table.table_name = "";
+    return res_table;
+}
+
+
+Table Select(Table table1,vector<cond> cons){
+    Table new_table;
+
+    for(int i=0;i<table1.no_of_record();i++){
+        if(condition_checker(cons,table1.table_row[i],table1.table_attr )){ 
+            new_table.table_row.push_back(table1.table_row[i]);
+        }
+    }
+    for(int j=0;j<table1.no_of_attribute();j++){       
+        new_table.table_attr.push_back(table1.table_attr[j]);
+        new_table.table_attr_type.push_back(table1.table_attr_type[j]);
+    }
+
+    new_table.table_name = "";
+    return new_table;
+}
+
+Table Rename(Table table1,vector<string> sets_attr,string new_name){
+
+    Table new_table;
+    bool flag=1;
+    if(sets_attr.size()==0)flag=0;
+    if(flag && sets_attr.size()!=table1.table_attr.size()){
+        error_generate(2);
+    }
+    for(int i=0;i<table1.no_of_record();i++){
+        Table_row record;
+        for(int j=0;j<table1.no_of_attribute();j++){
+            if(i==0){
+                if(flag){                      
+                    new_table.table_attr.push_back(sets_attr[j]);
+                    new_table.table_attr_type.push_back(table1.table_attr_type[j]);
+                }
+                else{                          
+                    new_table.table_attr.push_back(table1.table_attr[j]);
+                    new_table.table_attr_type.push_back(table1.table_attr_type[j]);
+                }
+            }
+            record.row.push_back(table1.table_row[i].row[j]);
+
+        }
+        new_table.table_row.push_back(record);  
+    }
+
+    new_table.table_name = new_name;
+    return new_table;
+}
+
+
+Table Union(Table table1, Table table2){
+
+    if(table1.no_of_attribute()!=table2.no_of_attribute()){
+        error_generate(1);
+    }
+
+    vector<bool> attribute_checker(false,table1.no_of_attribute()); 
+    for(int i=0;i<table1.no_of_attribute();i++){
+
+        if(!string_comparer(table1.table_attr[i],table2.table_attr[i]) || table1.table_attr_type[i]!=table2.table_attr_type[i]){
+            error_generate(8);
+        }
+    }
+
+    for(int i=0;i<table2.no_of_record();i++){  
+        Table_row record;
+        bool flag=1;
+		for(int j=0;j<table1.no_of_record();j++){
+            int cnt=0;
+            for(int k=0;k<table2.no_of_attribute();k++){
+                if(data_type_comparer(table2.table_row[i].row[k],table1.table_row[j].row[k])){
+                    cnt++;
+                }
+            }
+            if(cnt==table2.no_of_attribute()){ 
+                flag=0;
+                break;
+            }
+        }
+
+        for(int j=0;j<table1.no_of_attribute();j++){   
+            record.row.push_back(table2.table_row[i].row[j]);
+        }
+
+        if(flag)table1.table_row.push_back(record);
+
+    }
+
+    return table1;
+}
+
+Table CartesianProduct(Table table1, Table table2){
+
+    Table new_table;
+
+    vector<bool> attribute_checker(false,table1.no_of_attribute()); 
+    for(int i=0;i<table1.no_of_record();i++){ 
+        for(int j=0;j<table2.no_of_record();j++){
+            Table_row record;
+            for(int k=0;k<table1.no_of_attribute();k++){
+                record.row.push_back(table1.table_row[i].row[k]);
+            }
+            for(int k=0;k<table2.no_of_attribute();k++){
+                record.row.push_back(table2.table_row[j].row[k]);
+            }
+
+            new_table.table_row.push_back(record);
+        }
+
+    }
+    for(int k=0;k<table1.no_of_attribute();k++){
+        new_table.table_attr.push_back(table1.table_name+"."+table1.table_attr[k]);
+        new_table.table_attr_type.push_back(table1.table_attr_type[k]);
+    }
+
+    for(int k=0;k<table2.no_of_attribute();k++){
+        new_table.table_attr.push_back(table2.table_name+"."+table2.table_attr[k]);
+        new_table.table_attr_type.push_back(table2.table_attr_type[k]);
+	 }
+
+    for(int k=0;k<table2.no_of_attribute();k++){
+        new_table.table_attr.push_back(table2.table_name+"."+table2.table_attr[k]);
+        new_table.table_attr_type.push_back(table2.table_attr_type[k]);
+    }
+    for(int i=0;i<new_table.no_of_attribute();i++)
+        for(int j=0;j<new_table.no_of_attribute();j++)if(i!=j && my_str_cmp(new_table.table_attr[i],new_table.table_attr[j])){
+            error_generate(7);
+        }
+    return new_table;
+}
+
+Table SetDifference(Table table1, Table table2){
+
+    if(table1.no_of_attribute()!=table2.no_of_attribute()){
+        error_generate(1);
+    }
+    Table new_table;
+
+    vector<bool> attribute_checker(false,table1.no_of_attribute()); 
+    for(int i=0;i<table1.no_of_attribute();i++){
+        if(!string_comparer(table1.table_attr[i],table2.table_attr[i]) || table1.table_attr_type[i]!=table2.table_attr_type[i]){
+            error_generate(8);
+        }
+    }
+    for(int i=0;i<table1.no_of_record();i++){  
+        Table_row record;
+        bool flag=1;
+        for(int j=0;j<table2.no_of_record();j++){
+            int cnt=0;
+            for(int k=0;k<table2.no_of_attribute();k++){
+                if(data_type_comarer(table2.table_row[j].row[k],table1.table_row[i].row[k])){ 
+                    cnt++;
+                }
+            }
+			if(cnt==table2.no_of_attribute()){ 
+                flag=0;
+                break;
+            }
+        }
+
+        record = table1.table_row[i];
+        if(flag)new_table.table_row.push_back(record);
+
+    }
+    for(int k=0;k<table1.no_of_attribute();k++){
+            new_table.table_attr.push_back(table1.table_attr[k]);
+            new_table.table_attr_type.push_back(table1.table_attr_type[k]);
+    }
+    new_table.table_name="";
+    return new_table;
+}
+
+
+
+
+
+
+
+
 
 
 	
